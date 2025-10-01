@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes shine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shine {
+  background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.4) 70%, transparent 100%);
+  animation: shine 3s infinite;
+  background-size: 200% auto;
+}
