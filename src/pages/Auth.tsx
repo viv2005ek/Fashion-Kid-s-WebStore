@@ -151,7 +151,7 @@ export const Auth: React.FC = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 pt-20">
         {/* Floating decorative elements */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-20 left-20 text-pink-300 text-3xl animate-float">💖</div>
