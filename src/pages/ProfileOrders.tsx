@@ -4,7 +4,7 @@ import { Order, Product } from "../types/product";
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Loading } from "./Loading";
-import { Package, Calendar, IndianRupee, ArrowRight, CheckCircle, X, ShoppingBag } from "lucide-react";
+import { Package, Calendar, IndianRupee, ArrowRight, CheckCircle, X, ShoppingBag, Dot } from "lucide-react";
 import { motion } from "framer-motion";
 
 // Define OrderItem type locally since it's not exported
@@ -301,15 +301,61 @@ export const ProfileOrders: React.FC = () => {
               </div>
 
               {/* Status */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 bg-gradient-to-r from-green-100 to-emerald-100 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full">
-                  <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
-                  <span className="text-xs sm:text-sm font-semibold text-green-700 font-poppins">
-                    {order.payment_status || 'Paid'}
-                  </span>
-                </div>
-                <ArrowRight className="h-4 w-4 text-cute-charcoal opacity-50 group-hover:translate-x-1 transition-transform duration-300" />
-              </div>
+          {/* Status */}
+<div className="flex items-center gap-3">
+  <div className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full 
+    ${
+      order.status === 'completed'
+        ? 'bg-green-100 text-green-700'
+        : order.status === 'pending'
+        ? 'bg-yellow-100 text-yellow-700'
+        : 'bg-red-100 text-red-700'
+    }`}
+  >
+{order.status === "completed" && (
+  <motion.div
+    className="flex items-center justify-center h-6 w-6 rounded-full bg-green-100"
+    initial={{ scale: 0 }}
+    animate={{ scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }}
+    transition={{ duration: 1.5, repeat: Infinity }}
+  >
+    <motion.span
+      className="text-green-600 font-bold text-xs"
+      initial={{ scale: 0 }}
+      animate={{ scale: 1 }}
+      transition={{ delay: 0.3, duration: 0.5 }}
+    >
+      ✔
+    </motion.span>
+  </motion.div>
+)}
+
+{/* Pending (Yellow Bouncing Dot) */}
+{order.status === "pending" && (
+  <motion.div
+    className="h-3 w-3 rounded-full bg-yellow-400"
+    animate={{ y: [0, -4, 0] }}
+    transition={{ repeat: Infinity, duration: 0.6 }}
+  />
+)}
+
+{/* Cancelled (Red Cross with Shake) */}
+{order.status === "cancelled" && (
+  <motion.div
+    className="flex items-center justify-center h-6 w-6 rounded-full bg-red-100"
+    animate={{ rotate: [0, -10, 10, -10, 0] }}
+    transition={{ duration: 0.6 }}
+  >
+    <span className="text-red-600 font-bold text-xs">✖</span>
+  </motion.div>
+)}
+    <span className="text-xs sm:text-sm font-semibold font-poppins capitalize">
+      {order.status}
+    </span>
+  </div>
+  <ArrowRight className="h-4 w-4 text-cute-charcoal opacity-50 group-hover:translate-x-1 transition-transform duration-300" />
+</div>
+
             </div>
           </div>
 
@@ -355,6 +401,7 @@ export const ProfileOrders: React.FC = () => {
                   <h2 className="text-xl font-bold font-baloo">
                     Order Details {selectedOrder && formatOrderId(selectedOrder.id)}
                   </h2>
+                  
                 </div>
                 <button
                   onClick={closeModal}
@@ -363,6 +410,7 @@ export const ProfileOrders: React.FC = () => {
                   <X className="h-5 w-5" />
                 </button>
               </div>
+              
               <div className="mt-2 flex flex-wrap gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
@@ -374,6 +422,41 @@ export const ProfileOrders: React.FC = () => {
                   <IndianRupee className="h-4 w-4" />
                   <span className="font-semibold">Total: {selectedOrder?.total_amount.toFixed(2)}</span>
                 </div>
+                 {selectedOrder && (
+      <div
+        className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold capitalize
+          ${
+            selectedOrder.status === "completed"
+              ? "bg-green-100 text-green-700"
+              : selectedOrder.status === "pending"
+              ? "bg-yellow-100 text-yellow-700"
+              : "bg-red-100 text-red-700"
+          }`}
+      >
+        {selectedOrder.status === "completed" && (
+          <motion.div
+            className="h-2 w-2 rounded-full bg-green-500"
+            animate={{ scale: [1, 1.3, 1], opacity: [1, 0.7, 1] }}
+            transition={{ duration: 1.2, repeat: Infinity }}
+          />
+        )}
+        {selectedOrder.status === "pending" && (
+          <motion.div
+            className="h-2 w-2 rounded-full bg-yellow-400"
+            animate={{ y: [0, -3, 0] }}
+            transition={{ duration: 0.6, repeat: Infinity }}
+          />
+        )}
+        {selectedOrder.status === "cancelled" && (
+          <motion.div
+            className="h-2 w-2 rounded-full bg-red-500"
+            animate={{ rotate: [0, -20, 20, -20, 0] }}
+            transition={{ duration: 0.6, repeat: Infinity }}
+          />
+        )}
+        {selectedOrder.status}
+      </div>
+    )}
               </div>
             </div>
 
