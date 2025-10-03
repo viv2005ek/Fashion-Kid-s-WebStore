@@ -76,12 +76,15 @@ export const useAuth = () => {
 const signOut = () => supabase.auth.signOut();
 
 const signInWithGoogle = async () => {
-  return await supabase.auth.signInWithOAuth({
+  const result = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
       redirectTo: `${window.location.origin}/auth/callback`,
     },
   });
+
+  // Profile will be created in AuthCallback component
+  return result;
 };
 
 const resetPassword = async (email: string) => {

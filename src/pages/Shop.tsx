@@ -30,22 +30,24 @@ export const Shop: React.FC = () => {
     handleSearchAndFilter();
   }, [products, selectedCategory, searchQuery]);
 
-  const fetchProducts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("created_at", { ascending: false });
+ const fetchProducts = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("is_active", true)   // ✅ fetch only active products
+      .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setProducts(data || []);
-      setFilteredProducts(data || []);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    if (error) throw error;
+    setProducts(data || []);
+    setFilteredProducts(data || []);
+  } catch (error) {
+    console.error("Error fetching products:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleSearchAndFilter = () => {
     let filtered = [...products];

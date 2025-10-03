@@ -194,35 +194,45 @@ export const ProductDetail: React.FC = () => {
       className="bg-white rounded-3xl shadow-2xl overflow-hidden border-2 border-pink-100 hover:border-purple-200 transition-all duration-300 cursor-pointer"
       onClick={() => document.getElementById('image-modal')?.classList.remove('hidden')}
     >
-      <div className="relative w-full h-96 sm:h-[28rem] lg:h-[32rem]">
-        <img
-          src={product.image_url}
-          alt={product.name}
-          className="w-full h-full object-contain"
-        />
-        
-        {/* Tag Badge */}
-        <span className="absolute top-4 left-4 bg-gradient-to-r from-pink-400 to-purple-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
-          {product.tag}
-        </span>
+     <div className="relative w-full h-96 sm:h-[28rem] lg:h-[32rem]">
+  <img
+    src={product.image_url}
+    alt={product.name}
+    className="w-full h-full object-contain"
+  />
 
-        {/* Like Button */}
-        <motion.button
-          whileHover={{ scale: 1.2, rotate: 10 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleLikeClick();
-          }}
-          className={`absolute top-4 right-4 p-3 rounded-2xl shadow-lg transition-all duration-300 ${
-            isLiked 
-              ? 'bg-gradient-to-r from-pink-400 to-red-400 text-white' 
-              : 'bg-white/90 text-pink-400 hover:bg-pink-50'
-          }`}
-        >
-          <Heart className={`h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
-        </motion.button>
-      </div>
+  {/* Tag Badge */}
+  <span className="absolute top-4 left-4 bg-gradient-to-r from-pink-400 to-purple-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
+    {product.tag}
+  </span>
+
+  {/* Out of Stock Overlay 🔥 */}
+  {!product.is_active && (
+    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+      <span className="text-white font-bold text-lg font-poppins">
+        Out of Stock
+      </span>
+    </div>
+  )}
+
+  {/* Like Button */}
+  <motion.button
+    whileHover={{ scale: 1.2, rotate: 10 }}
+    whileTap={{ scale: 0.9 }}
+    onClick={(e) => {
+      e.stopPropagation();
+      handleLikeClick();
+    }}
+    className={`absolute top-4 right-4 p-3 rounded-2xl shadow-lg transition-all duration-300 ${
+      isLiked
+        ? 'bg-gradient-to-r from-pink-400 to-red-400 text-white'
+        : 'bg-white/90 text-pink-400 hover:bg-pink-50'
+    }`}
+  >
+    <Heart className={`h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
+  </motion.button>
+</div>
+
     </div>
   </motion.div>
 
@@ -271,33 +281,44 @@ export const ProductDetail: React.FC = () => {
     </div>
 
     {/* Action Buttons - Side by Side */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-       <motion.button
-        whileHover={{ scale: 1.05, y: -2 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={handleWhatsAppQuery}
-        className="bg-transparent border-2 border-purple-500 text-purple-500 hover:bg-purple-500 hover:text-white font-bold py-4 px-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-3 font-poppins text-base"
-      >
-        <MessageCircle className="h-5 w-5" />
-        <span>Any Query?</span>
-      </motion.button>
-   <motion.button
-  whileHover={{ scale: 1.05, y: -2 }}
-  whileTap={{ scale: 0.95 }}
-  onClick={handleAddToCart}
-  disabled={isAddingToCart}
-  className="relative overflow-hidden bg-gradient-to-l from-pink-500 to-purple-500 text-white font-bold py-4 px-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-3 font-poppins text-base disabled:opacity-50 disabled:cursor-not-allowed"
->
-  <ShoppingCart className="h-5 w-5" />
-  <span>{isAddingToCart ? 'Adding...' : 'Add to Cart'}</span>
+   {/* Action Buttons - Side by Side */}
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  {/* WhatsApp Query */}
+  <motion.button
+    whileHover={{ scale: 1.05, y: -2 }}
+    whileTap={{ scale: 0.95 }}
+    onClick={handleWhatsAppQuery}
+    className="bg-transparent border-2 border-purple-500 text-purple-500 hover:bg-purple-500 hover:text-white font-bold py-4 px-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-3 font-poppins text-base"
+  >
+    <MessageCircle className="h-5 w-5" />
+    <span>Any Query?</span>
+  </motion.button>
 
-  {/* Shine Overlay */}
-  <span className="absolute top-0 left-0 w-full h-full bg-white/30 transform -translate-x-full rotate-5 pointer-events-none animate-shine"></span>
-</motion.button>
+  {/* Add to Cart */}
+  <motion.button
+    whileHover={product.is_active ? { scale: 1.05, y: -2 } : {}}
+    whileTap={product.is_active ? { scale: 0.95 } : {}}
+    onClick={product.is_active ? handleAddToCart : undefined}
+    disabled={isAddingToCart || !product.is_active}
+    className={`relative overflow-hidden font-bold py-4 px-6 rounded-2xl shadow-lg transition-all duration-300 flex items-center justify-center space-x-3 font-poppins text-base
+      ${product.is_active 
+        ? 'bg-gradient-to-l from-pink-500 to-purple-500 text-white hover:shadow-xl' 
+        : 'bg-gray-300 text-gray-600 cursor-not-allowed opacity-70'}`}
+  >
+    <ShoppingCart className="h-5 w-5" />
+    <span>
+      {product.is_active 
+        ? (isAddingToCart ? 'Adding...' : 'Add to Cart') 
+        : 'Unavailable'}
+    </span>
 
+    {/* Shine Overlay (only if active) */}
+    {product.is_active && (
+      <span className="absolute top-0 left-0 w-full h-full bg-white/30 transform -translate-x-full rotate-5 pointer-events-none animate-shine"></span>
+    )}
+  </motion.button>
+</div>
 
-     
-    </div>
   </motion.div>
 </div>
 

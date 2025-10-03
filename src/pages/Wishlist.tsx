@@ -257,30 +257,41 @@ const showPopup = (text: string, type: 'success' | 'error' = 'success') => {
       className="relative bg-white rounded-2xl shadow-lg overflow-hidden border border-pink-100 hover:border-purple-300 transition-all duration-500 group "
     >
       {/* Image section */}
-      <div className="relative overflow-hidden">
-        <motion.img
-          src={item.product?.image_url}
-          alt={item.product?.name}
-          className="w-full h-56 object-cover transform group-hover:scale-110 transition-transform duration-700"
-        />
+     {/* Image section */}
+<div className="relative overflow-hidden">
+  <motion.img
+    src={item.product?.image_url}
+    alt={item.product?.name}
+    className="w-full h-56 object-cover transform group-hover:scale-110 transition-transform duration-700"
+  />
 
-        {/* Category (Top-Left) */}
-        {item.product?.category && (
-          <span className="absolute top-3 left-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md font-poppins">
-            {item.product.category}
-          </span>
-        )}
+  {/* Category (Top-Left) */}
+  {item.product?.category && (
+    <span className="absolute top-3 left-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md font-poppins">
+      {item.product.category}
+    </span>
+  )}
 
-        {/* Delete Button (Top-Right) */}
-        <motion.button
-          whileHover={{ scale: 1.2, rotate: 12 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => removeFromWishlist(item.id)}
-          className="absolute top-3 right-3 bg-red-500/90 text-white p-2 rounded-full shadow-lg hover:bg-red-600 transition-all duration-300"
-        >
-          <Trash2 className="h-4 w-4" />
-        </motion.button>
-      </div>
+  {/* Out of Stock Overlay 🔥 */}
+  {!item.product?.is_active && (
+    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+      <span className="text-white font-bold text-lg font-poppins">
+        Out of Stock
+      </span>
+    </div>
+  )}
+
+  {/* Delete Button (Top-Right) */}
+  <motion.button
+    whileHover={{ scale: 1.2, rotate: 12 }}
+    whileTap={{ scale: 0.9 }}
+    onClick={() => removeFromWishlist(item.id)}
+    className="absolute top-3 right-3 bg-red-500/90 text-white p-2 rounded-full shadow-lg hover:bg-red-600 transition-all duration-300"
+  >
+    <Trash2 className="h-4 w-4" />
+  </motion.button>
+</div>
+
 
       {/* Details */}
       <div className="p-5 bg-gradient-to-br from-pink-200 to-purple-100 ">
@@ -325,10 +336,11 @@ const showPopup = (text: string, type: 'success' | 'error' = 'success') => {
 
           {/* Cart Button (Solid Gradient) */}
          <motion.button
-  whileHover={{ scale: 1.05 }}
-  whileTap={{ scale: 0.95 }}
-  onClick={() => addToCart(item.product_id)}
-  className="relative flex-1 overflow-hidden bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 px-4 rounded-xl font-medium shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-1 font-poppins"
+  whileHover={item.product?.is_active ? { scale: 1.05 } : {}}
+  whileTap={item.product?.is_active ? { scale: 0.95 } : {}}
+  onClick={() => item.product?.is_active && addToCart(item.product_id)}
+  disabled={!item.product?.is_active}  
+  className={`relative flex-1 overflow-hidden bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 px-4 rounded-xl font-medium shadow-md  transition-all duration-300 flex items-center justify-center space-x-1 font-poppins ${item.product?.is_active ? 'hover:shadow-lg' : 'cursor-not-allowed opacity-50 '}`}
 >
    <span className="absolute top-0 left-0 w-full h-full bg-white/30 
                      transform -translate-x-full rotate-20 pointer-events-none 
@@ -338,7 +350,7 @@ const showPopup = (text: string, type: 'success' | 'error' = 'success') => {
   ) : (
     <>
       <ShoppingCart className="h-4 w-4" />
-      <span>Cart</span>
+      <span>{item.product?.is_active ? 'Cart' : 'Unavailable'}</span>
     </>
   )}
 </motion.button>

@@ -8,6 +8,7 @@ export interface Product {
   tag: string;
   category: string;
   created_at: string;
+  is_active: boolean;
 }
 
 export interface Profile {

@@ -114,80 +114,82 @@ const fetchUserData = async () => {
     }
   };
 
-  const getTotalPrice = () => {
-    return cartItems.reduce((total, item) => 
-      total + (item.product?.price || 0) * item.quantity, 0
-    );
-  };
+ const getTotalPrice = () => {
+  return cartItems.reduce((total, item) => 
+    item.product?.is_active 
+      ? total + (item.product?.price || 0) * item.quantity 
+      : total, 
+    0
+  );
+};
 
   const handleRazorpayPayment = async () => {
-      if (!profile?.name || !profile?.phone || addresses.length === 0) {
+  if (!profile?.name || !profile?.phone || addresses.length === 0) {
     showToast('Please complete your profile information first', 'warning');
-    setTimeout(() => {
-      navigate('/profile');
-    }, 1500);
+    setTimeout(() => navigate('/profile'), 1500);
     return;
   }
 
-    try {
-      const totalAmount = getTotalPrice();
-      
-      // Create order in database
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          user_id: user!.id,
-          total_amount: totalAmount,
-          status: 'completed',
-          payment_method: 'razorpay',
-          payment_status: 'paid'
-        })
-        .select()
-        .single();
+  // Filter active products only
+  const activeItems = cartItems.filter(item => item.product?.is_active);
+  if (activeItems.length === 0) {
+    showToast('Your cart has no available products to checkout.', 'error');
+    return;
+  }
 
-      if (orderError) throw orderError;
+  try {
+    const totalAmount = activeItems.reduce(
+      (total, item) => total + (item.product?.price || 0) * item.quantity,
+      0
+    );
 
-      // Create order items
-      const orderItems = cartItems.map(item => ({
-        order_id: orderData.id,
-        product_id: item.product_id,
-        quantity: item.quantity,
-        price: item.product?.price || 0
-      }));
+    // Create order
+    const { data: orderData, error: orderError } = await supabase
+      .from('orders')
+      .insert({
+        user_id: user!.id,
+        total_amount: totalAmount,
+        status: 'pending',
+        payment_method: 'razorpay',
+        payment_status: 'paid'
+      })
+      .select()
+      .single();
 
-      await supabase
-        .from('order_items')
-        .insert(orderItems);
+    if (orderError) throw orderError;
 
-      // Clear cart
-      await supabase
-        .from('cart')
-        .delete()
-        .eq('user_id', user!.id);
+    // Insert order items (only active ones)
+    const orderItems = activeItems.map(item => ({
+      order_id: orderData.id,
+      product_id: item.product_id,
+      quantity: item.quantity,
+      price: item.product?.price || 0
+    }));
 
-      // Add notification
-      await supabase
-        .from('notifications')
-        .insert({
-          user_id: user!.id,
-          title: 'Order Placed Successfully!',
-          message: `Your order of Rs. ${totalAmount.toFixed(2)} has been placed successfully.`,
-          is_read: false
-        });
+    await supabase.from('order_items').insert(orderItems);
 
-      setCartItems([]);
-      showToast('Payment successful! Order placed.', 'success');
-      
-      // Simulate Razorpay payment (in real app, integrate actual Razorpay)
-      setTimeout(() => {
-        navigate('/profile/orders');
-      }, 2000);
-      
-    } catch (error) {
-      console.error('Error processing payment:', error);
-      showToast('Payment failed. Please try again.', 'error');
-    }
-  };
+    // Clear only active products from cart
+    const activeIds = activeItems.map(item => item.id);
+    await supabase.from('cart').delete().in('id', activeIds);
+
+    // Notification
+    await supabase.from('notifications').insert({
+      user_id: user!.id,
+      title: 'Order Placed Successfully!',
+      message: `Your order of Rs. ${totalAmount.toFixed(2)} has been placed successfully.`,
+      is_read: false
+    });
+
+    setCartItems(prev => prev.filter(item => !item.product?.is_active));
+    showToast('Payment successful! Order placed.', 'success');
+
+    setTimeout(() => navigate('/profile/orders'), 2000);
+  } catch (error) {
+    console.error('Error processing payment:', error);
+    showToast('Payment failed. Please try again.', 'error');
+  }
+};
+
 
 
 if (loading || loadingCart) {
@@ -300,51 +302,62 @@ if (loading || loadingCart) {
 </motion.div>
     
     {/* Product Info */}
-    <div className="flex-1 min-w-0">
-      <h3 className="text-base sm:text-lg font-semibold text-cute-charcoal font-baloo truncate">
-        {item.product?.name}
-      </h3>
-      <div className="text-lg font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
-        Rs. {item.product?.price.toFixed(2)}
-      </div>
+   <div className="flex-1 min-w-0">
+  <h3 className="text-base sm:text-lg font-semibold text-cute-charcoal font-baloo truncate">
+    {item.product?.name}
+  </h3>
+  {item.product?.is_active ? (
+    <div className="text-lg font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+      Rs. {item.product?.price.toFixed(2)}
     </div>
+  ) : (
+    <div className="text-sm font-bold text-red-500">Out of Stock</div>
+  )}
+</div>
 
-    {/* Quantity Controls */}
-    <div className="flex items-center justify-between sm:justify-center w-full sm:w-auto gap-4 sm:gap-3">
-      <div className="flex items-center gap-3">
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-          className="bg-pink-200 text-cute-charcoal p-2 rounded-full hover:bg-pink-300 transition-all duration-300"
-        >
-          <Minus className="h-4 w-4" />
-        </motion.button>
-        
-        <span className="text-lg font-semibold text-cute-charcoal min-w-[2rem] text-center">
-          {item.quantity}
-        </span>
-        
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-          className="bg-green-200 text-cute-charcoal p-2 rounded-full hover:bg-green-300 transition-all duration-300"
-        >
-          <Plus className="h-4 w-4" />
-        </motion.button>
-      </div>
-
-      {/* Delete Button */}
+{/* Quantity Controls */}
+<div className="flex items-center justify-between sm:justify-center w-full sm:w-auto gap-4 sm:gap-3">
+  {item.product?.is_active ? (
+    <div className="flex items-center gap-3">
+      {/* minus */}
       <motion.button
-        whileHover={{ scale: 1.1, rotate: 10 }}
+        whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        onClick={() => removeFromCart(item.id)}
-        className="bg-red-200 text-red-600 p-2 rounded-full hover:bg-red-300 transition-all duration-300"
+        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+        className="bg-pink-200 text-cute-charcoal p-2 rounded-full hover:bg-pink-300 transition-all duration-300"
       >
-        <Trash2 className="h-4 w-4" />
+        <Minus className="h-4 w-4" />
+      </motion.button>
+
+      <span className="text-lg font-semibold text-cute-charcoal min-w-[2rem] text-center">
+        {item.quantity}
+      </span>
+
+      {/* plus */}
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+        className="bg-green-200 text-cute-charcoal p-2 rounded-full hover:bg-green-300 transition-all duration-300"
+      >
+        <Plus className="h-4 w-4" />
       </motion.button>
     </div>
+  ) : (
+    <span className="text-sm text-gray-500 font-poppins">Unavailable</span>
+  )}
+
+  {/* Delete Button (always active) */}
+  <motion.button
+    whileHover={{ scale: 1.1, rotate: 10 }}
+    whileTap={{ scale: 0.9 }}
+    onClick={() => removeFromCart(item.id)}
+    className="bg-red-200 text-red-600 p-2 rounded-full hover:bg-red-300 transition-all duration-300"
+  >
+    <Trash2 className="h-4 w-4" />
+  </motion.button>
+</div>
+
   </div>
 </motion.div>
                 ))}
