@@ -64,6 +64,9 @@ const handleAddProduct = async (productData: Omit<Product, 'product_id'>) => {
 
     if (error) throw error;
 
+    // ✅ Create notifications for all users when a new product is added
+    await createProductNotifications(data);
+
     setProducts(prev => [data, ...prev]);
     setShowAddProduct(false);
     showToast('Product added successfully!', 'success');
@@ -73,8 +76,49 @@ const handleAddProduct = async (productData: Omit<Product, 'product_id'>) => {
   }
 };
 
+// ✅ New function to create notifications for all users
+const createProductNotifications = async (newProduct: Product) => {
+  try {
+    // Get all users from profiles table
+    const { data: users, error: usersError } = await supabase
+      .from('profiles')
+      .select('id');
 
- const handleUpdateProduct = async (productData: Omit<Product, 'product_id'>) => {
+    if (usersError) throw usersError;
+
+    if (!users || users.length === 0) return;
+
+    // Prepare notifications data for all users
+    const notificationsData = users.map(user => ({
+      user_id: user.id,
+      title: ' New Product Alert!',
+      message: `Check out our new product: "${newProduct.name}" - ${newProduct.description?.substring(0, 100)}...`,
+      is_read: false,
+      created_at: new Date().toISOString()
+    }));
+
+    // Insert notifications in batches to avoid payload limits
+    const batchSize = 50;
+    for (let i = 0; i < notificationsData.length; i += batchSize) {
+      const batch = notificationsData.slice(i, i + batchSize);
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert(batch);
+
+      if (notificationError) {
+        console.error('Error inserting notifications batch:', notificationError);
+        // Continue with next batches even if one fails
+      }
+    }
+
+    console.log(`Created notifications for ${users.length} users`);
+  } catch (error) {
+    console.error('Error creating product notifications:', error);
+    // Don't throw error here to avoid affecting product creation
+  }
+};
+
+const handleUpdateProduct = async (productData: Omit<Product, 'product_id'>) => {
   if (!editingProduct) return;
 
   try {

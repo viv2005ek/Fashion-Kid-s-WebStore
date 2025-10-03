@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, Check, Trash2 } from 'lucide-react';
+import { Bell, Check, Trash2, CheckCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -57,6 +57,28 @@ export const Notifications: React.FC = () => {
     }
   };
 
+  const markAllAsRead = async () => {
+    try {
+      const unreadNotifications = notifications.filter(notif => !notif.is_read);
+      
+      if (unreadNotifications.length === 0) return;
+
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('user_id', user!.id)
+        .eq('is_read', false);
+
+      if (error) throw error;
+      
+      setNotifications(prev => 
+        prev.map(notif => ({ ...notif, is_read: true }))
+      );
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    }
+  };
+
   const deleteNotification = async (notificationId: string) => {
     try {
       await supabase
@@ -69,6 +91,9 @@ export const Notifications: React.FC = () => {
       console.error('Error deleting notification:', error);
     }
   };
+
+  // Check if there are any unread notifications
+  const hasUnreadNotifications = notifications.some(notif => !notif.is_read);
 
   if (loading) {
     return (
@@ -89,23 +114,23 @@ export const Notifications: React.FC = () => {
       {/* Header */}
       <div className="bg-gradient-to-r from-yellow-300 to-orange-300 text-white py-16 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-  <div className="absolute top-8 left-12 w-5 h-5 bg-gradient-to-r from-pink-400 to-purple-400 rounded opacity-90 animate-float"></div>
-  <div className="absolute top-20 right-16 w-6 h-6 bg-pink-300 rounded-full opacity-80 animate-bounce-slow"></div>
-  <div className="absolute top-1/3 left-1/4 w-4 h-4 bg-purple-300 rounded opacity-70 animate-float-reverse"></div>
-  <div className="absolute bottom-16 left-1/4 w-6 h-2 bg-pink-400 rounded opacity-60 animate-pulse-slow"></div>
-  <div className="absolute bottom-10 right-1/3 w-4 h-4 bg-yellow-400 rounded-full opacity-80 animate-float"></div>
-  <div className="absolute top-1/2 right-1/4 w-3 h-3 bg-purple-400 rounded opacity-70 animate-float"></div>
-  <div className="absolute top-2/5 left-1/2 w-2 h-2 bg-pink-500 rounded-full opacity-60 animate-bounce-slow"></div>
-  <div className="absolute bottom-20 right-1/4 w-3 h-8 bg-purple-300 rounded opacity-70 animate-float-reverse"></div>
+          <div className="absolute top-8 left-12 w-5 h-5 bg-gradient-to-r from-pink-400 to-purple-400 rounded opacity-90 animate-float"></div>
+          <div className="absolute top-20 right-16 w-6 h-6 bg-pink-300 rounded-full opacity-80 animate-bounce-slow"></div>
+          <div className="absolute top-1/3 left-1/4 w-4 h-4 bg-purple-300 rounded opacity-70 animate-float-reverse"></div>
+          <div className="absolute bottom-16 left-1/4 w-6 h-2 bg-pink-400 rounded opacity-60 animate-pulse-slow"></div>
+          <div className="absolute bottom-10 right-1/3 w-4 h-4 bg-yellow-400 rounded-full opacity-80 animate-float"></div>
+          <div className="absolute top-1/2 right-1/4 w-3 h-3 bg-purple-400 rounded opacity-70 animate-float"></div>
+          <div className="absolute top-2/5 left-1/2 w-2 h-2 bg-pink-500 rounded-full opacity-60 animate-bounce-slow"></div>
+          <div className="absolute bottom-20 right-1/4 w-3 h-8 bg-purple-300 rounded opacity-70 animate-float-reverse"></div>
 
-  <div className="absolute top-1/2 left-20 w-8 h-8 bg-blue-300 rounded-full opacity-70 animate-float"></div>
-  <div className="absolute bottom-8 left-12 w-5 h-5 bg-green-300 rounded opacity-80 animate-bounce-slow"></div>
-  <div className="absolute top-16 right-1/2 w-4 h-4 bg-yellow-400 rounded opacity-60 animate-pulse-slow"></div>
-  <div className="absolute bottom-1/4 right-20 w-6 h-6 bg-pink-400 rounded-full opacity-90 animate-float-reverse"></div>
-  <div className="absolute top-1/4 left-16 w-3 h-3 bg-purple-500 rounded opacity-70 animate-float"></div>
-  <div className="absolute bottom-1/3 left-1/3 w-2 h-2 bg-orange-400 rounded-full opacity-80 animate-bounce-slow"></div>
-</div>
-          <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-transparent to-white/20 animate-shine"></div>
+          <div className="absolute top-1/2 left-20 w-8 h-8 bg-blue-300 rounded-full opacity-70 animate-float"></div>
+          <div className="absolute bottom-8 left-12 w-5 h-5 bg-green-300 rounded opacity-80 animate-bounce-slow"></div>
+          <div className="absolute top-16 right-1/2 w-4 h-4 bg-yellow-400 rounded opacity-60 animate-pulse-slow"></div>
+          <div className="absolute bottom-1/4 right-20 w-6 h-6 bg-pink-400 rounded-full opacity-90 animate-float-reverse"></div>
+          <div className="absolute top-1/4 left-16 w-3 h-3 bg-purple-500 rounded opacity-70 animate-float"></div>
+          <div className="absolute bottom-1/3 left-1/3 w-2 h-2 bg-orange-400 rounded-full opacity-80 animate-bounce-slow"></div>
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-transparent to-white/20 animate-shine"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-10">
           <motion.h1
@@ -128,8 +153,27 @@ export const Notifications: React.FC = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        
-         {loadingNotification ? (
+        {/* Mark All Read Button */}
+        {!loadingNotification && notifications.length > 0 && hasUnreadNotifications && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex justify-end mb-6"
+          >
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={markAllAsRead}
+              className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white px-6 py-3 rounded-2xl font-poppins font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2"
+            >
+              <CheckCircle className="h-5 w-5" />
+              <span>Mark All as Read</span>
+            </motion.button>
+          </motion.div>
+        )}
+
+        {loadingNotification ? (
           <div className="flex justify-center items-center py-20">
             <div className="text-center">
               {/* Animated logo/icon */}

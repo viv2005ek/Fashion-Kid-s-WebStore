@@ -49,23 +49,37 @@ export const Shop: React.FC = () => {
 };
 
 
-  const handleSearchAndFilter = () => {
-    let filtered = [...products];
+ const handleSearchAndFilter = () => {
+  let filtered = [...products];
 
-    if (selectedCategory !== "all") {
-      filtered = filtered.filter(
-        (p) => p.category?.toLowerCase() === selectedCategory.toLowerCase()
+  // Filter by category (if not "all")
+  if (selectedCategory !== "all") {
+    filtered = filtered.filter(
+      (p) => p.category?.toLowerCase() === selectedCategory.toLowerCase()
+    );
+  }
+
+  // Filter by search query across multiple fields
+  if (searchQuery.trim()) {
+    const query = searchQuery.toLowerCase();
+
+    filtered = filtered.filter((p) => {
+      return (
+        p.name?.toLowerCase().includes(query) ||
+        p.description?.toLowerCase().includes(query) ||
+        p.category?.toLowerCase().includes(query) ||
+        p.tag?.toLowerCase().includes(query) ||
+        (Array.isArray(p.tags) &&
+          p.tags.some((tag: string) =>
+            tag.toLowerCase().includes(query)
+          ))
       );
-    }
+    });
+  }
 
-    if (searchQuery.trim()) {
-      filtered = filtered.filter((p) =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
+  setFilteredProducts(filtered);
+};
 
-    setFilteredProducts(filtered);
-  };
 
   const handleCategoryFilter = (category: string) => {
     setSelectedCategory(category);
@@ -167,7 +181,7 @@ export const Shop: React.FC = () => {
             className={`px-4 sm:px-6 py-2 sm:py-3 rounded-2xl font-medium font-poppins transition-all duration-300 transform hover:scale-105 text-sm sm:text-base ${
               selectedCategory === category.id
                 ? "bg-gradient-to-r from-pink-400 to-purple-400 text-white shadow-lg"
-                : "bg-white text-cute-charcoal hover:bg-gradient-to-r hover:from-pink-200 hover:to-purple-200 hover:text-white shadow-md"
+                : "bg-white text-cute-charcoal hover:bg-gradient-to-r hover:from-pink-200 hover:to-purple-200 hover:text-black shadow-md"
             }`}
           >
             {category.name}
