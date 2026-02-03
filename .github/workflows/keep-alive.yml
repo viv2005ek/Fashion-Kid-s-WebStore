@@ -1,27 +1,64 @@
 name: Keep Supabase Alive
 
 on:
+  # MULTIPLE triggers for reliability
   schedule:
-    - cron: '*/5 * * * *'  # Every 5 minutes
+    - cron: '*/15 * * * *'  # Every 15 minutes
+    - cron: '5,20,35,50 * * * *'  # At these minutes
+    - cron: '0 0,6,12,18 * * *'  # 4x daily backup
+  
+  # Always allow manual trigger
   workflow_dispatch:
+  
+  # Run on ANY push to master
+  push:
+    branches: [ master ]
+  
+  # Run on ANY pull request to master
+  pull_request:
+    branches: [ master ]
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     
     steps:
-      # ADD THIS DEBUG STEP
-      - name: Debug Schedule
-        run: |
-          echo "🕐 Current UTC time: $(date -u)"
-          echo "📅 GitHub event: ${{ github.event_name }}"
-          echo "🚀 Triggered by: ${{ github.actor }}"
-          echo "🔧 Workflow: ${{ github.workflow }}"
-      
-      - name: Ping Supabase
-        run: |
-          curl -s -o /dev/null \
+    - name: Debug Info
+      run: |
+        echo "=== 🚀 WORKFLOW TRIGGERED ==="
+        echo "Event: ${{ github.event_name }}"
+        echo "Time: $(date -u)"
+        echo "Actor: ${{ github.actor }}"
+        echo "Run ID: ${{ github.run_id }}"
+        echo "Branch: ${{ github.ref }}"
+        echo "============================="
+        
+        # Create proof file
+        echo "Ran at: $(date -u)" > proof.txt
+        echo "Event: ${{ github.event_name }}" >> proof.txt
+        echo "Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> proof.txt
+    
+    - name: Ping Supabase
+      run: |
+        echo "📡 Pinging Supabase..."
+        STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
           -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
-          "${{ secrets.SUPABASE_URL }}/rest/v1/"
-          
-          echo "✅ Ping successful at $(date -u)"
+          -m 10 \
+          "${{ secrets.SUPABASE_URL }}/rest/v1/")
+        
+        echo "HTTP Status: $STATUS"
+        
+        if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 201 ] || [ "$STATUS" -eq 204 ]; then
+          echo "✅ Supabase is alive!"
+          echo "result=success" >> $GITHUB_OUTPUT
+        else
+          echo "⚠️ Got status: $STATUS"
+          echo "result=warning" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Save Proof
+      uses: actions/upload-artifact@v4
+      with:
+        name: run-proof-${{ github.run_id }}
+        path: proof.txt
+        retention-days: 7
