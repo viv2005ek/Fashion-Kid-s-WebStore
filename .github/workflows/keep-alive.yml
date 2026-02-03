@@ -3,7 +3,7 @@ name: Keep Supabase Alive
 on:
   # MULTIPLE triggers for reliability
   schedule:
-    - cron: '*/15 * * * *'  # Every 15 minutes
+    - cron: '*/1 * * * *'  # Every 15 minutes
     - cron: '5,20,35,50 * * * *'  # At these minutes
     - cron: '0 0,6,12,18 * * *'  # 4x daily backup
   
