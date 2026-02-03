@@ -2,7 +2,7 @@ name: Keep Supabase Alive
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # Every 5 minutes (for testing)
+    - cron: '*/5 * * * *'  # Every 5 minutes
   workflow_dispatch:
 
 jobs:
@@ -10,6 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      # ADD THIS DEBUG STEP
+      - name: Debug Schedule
+        run: |
+          echo "🕐 Current UTC time: $(date -u)"
+          echo "📅 GitHub event: ${{ github.event_name }}"
+          echo "🚀 Triggered by: ${{ github.actor }}"
+          echo "🔧 Workflow: ${{ github.workflow }}"
+      
       - name: Ping Supabase
         run: |
           curl -s -o /dev/null \
