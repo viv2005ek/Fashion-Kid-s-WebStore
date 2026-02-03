@@ -2,10 +2,7 @@ name: Keep Supabase Alive
 
 on:
   schedule:
-    # Runs every 6 hours (4 times/day)
-    - cron: '0 */6 * * *'
-  
-  # Allow manual trigger
+    - cron: '*/5 * * * *'  # Every 5 minutes (for testing)
   workflow_dispatch:
 
 jobs:
